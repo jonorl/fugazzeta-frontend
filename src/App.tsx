@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Upload, Loader2, Pizza } from "lucide-react";
+import { FaGithub } from "react-icons/fa";
 const { Client } = await import("@gradio/client");
 
 interface Confidence {
@@ -278,6 +279,14 @@ export default function FugazzetaDetector() {
         {/* Footer */}
         <div className="text-center mt-8 text-sm text-gray-600">
           <p>{t.footer}</p>
+          <a
+              href="https://github.com/jonorl/fugazzeta-frontend"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center align-middle ml-2 hover:text-white/80"
+            >
+              <FaGithub className="mb-1" aria-label="GitHub" />
+            </a>
         </div>
       </div>
     </div>
