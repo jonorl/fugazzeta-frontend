@@ -1,21 +1,34 @@
-import { useState } from 'react';
-import { Upload, Loader2, Pizza } from 'lucide-react';
+import { useState } from "react";
+import { Upload, Loader2, Pizza } from "lucide-react";
+const { Client } = await import("@gradio/client");
+
+interface Confidence {
+  label: string;
+  confidence: number;
+}
+
+interface GradioResult {
+  label: string;
+  confidences: Confidence[];
+}
 
 export default function FugazzetaDetector() {
-  const [image, setImage] = useState(null);
-  const [preview, setPreview] = useState(null);
+  const [image, setImage] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null);
-  const [error, setError] = useState(null);
-  const [language, setLanguage] = useState('en');
+  const [result, setResult] = useState<GradioResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [language, setLanguage] = useState("en");
 
   const translations = {
     en: {
       title: "Fugazzeta Detector",
       subtitle: "AI-powered pizza classification",
       whatIs: "What is a Fugazzeta?",
-      description1: "Fugazzeta is a traditional Argentine pizza style, originating from Buenos Aires. It's characterized by its thick, fluffy dough filled with mozzarella cheese, topped with onions, and often finished with oregano and olive oil.",
-      description2: "Unlike regular pizza, fugazzeta has cheese both inside the dough and on top, creating a unique double-cheese experience that sets it apart from other pizza styles.",
+      description1:
+        "Fugazzeta is a traditional Argentine pizza style, originating from Buenos Aires. It's characterized by its thick, fluffy dough filled with mozzarella cheese, topped with onions, and often finished with oregano and olive oil.",
+      description2:
+        "Unlike regular pizza, fugazzeta has cheese both inside the dough and on top, creating a unique double-cheese experience that sets it apart from other pizza styles.",
       testYourPizza: "Test Your Pizza",
       uploadImage: "Upload a pizza image",
       fileTypes: "PNG, JPG up to 10MB",
@@ -28,42 +41,46 @@ export default function FugazzetaDetector() {
       notFugazzeta: "❌ Not a Fugazzeta",
       confidence: "Confidence:",
       tryAnother: "Try Another Pizza",
-      footer: "Powered by machine learning (fastAI) • Project by Jonathan Orlowski"
+      footer:
+        "Powered by machine learning (fastAI) • Project by Jonathan Orlowski",
     },
     es: {
       title: "Detector de Fugazzeta",
       subtitle: "Clasificación de pizza con inteligencia artificial",
       whatIs: "¿Qué es una Fugazzeta?",
-      description1: "La fugazzeta es un estilo tradicional de pizza argentina, originario de Buenos Aires. Se caracteriza por su masa gruesa y esponjosa rellena de queso muzzarella, cubierta con cebollas, orégano y aceite de oliva.",
-      description2: "A diferencia de la pizza común, la fugazzeta tiene queso tanto dentro de la masa como encima, creando una experiencia única de doble queso que la distingue de otros estilos de pizza.",
+      description1:
+        "La fugazzeta es un estilo tradicional de pizza argentina, originario de Buenos Aires. Se caracteriza por su masa gruesa y esponjosa rellena de queso muzzarella, cubierta con cebollas, orégano y aceite de oliva.",
+      description2:
+        "A diferencia de la pizza común, la fugazzeta tiene queso tanto dentro de la masa como encima, creando una experiencia única de doble queso que la distingue de otros estilos de pizza.",
       testYourPizza: "Es tu pizza una fugazzeta?",
       uploadImage: "Subi una imagen de pizza",
       fileTypes: "PNG, JPG hasta 10MB",
       clickToChange: "Hace click para cambiar la imagen",
       analyzePizza: "Analizar Pizza",
       analyzing: "Analizando...",
-      errorMessage: "Error al analizar la pizza. Por favor, inténtalo de nuevo.",
+      errorMessage:
+        "Error al analizar la pizza. Por favor, inténtalo de nuevo.",
       classificationResult: "Resultado del analisis",
       isFugazzeta: "🎉 ¡Es una Fugazzeta!",
       notFugazzeta: "❌ No es una Fugazzeta",
       confidence: "Confianza:",
       tryAnother: "Probar Otra Pizza",
-      footer: "Hecho con machine learning (fastAI) • Proyecto hecho por Jonathan Orlowski"
-    }
+      footer:
+        "Hecho con machine learning (fastAI) • Proyecto hecho por Jonathan Orlowski",
+    },
   };
 
-  const t = translations[language];
-
-  const handleImageChange = (e) => {
+  const t = translations[language as keyof typeof translations];
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setImage(file);
       setResult(null);
       setError(null);
-      
+
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPreview(reader.result);
+        setPreview(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
@@ -71,24 +88,30 @@ export default function FugazzetaDetector() {
 
   const analyzePizza = async () => {
     if (!image) return;
-    
+
     setLoading(true);
     setError(null);
-    
+
     try {
-      const { Client } = await import("https://cdn.jsdelivr.net/npm/@gradio/client/dist/index.min.js");
-      const client = await Client.connect("jonorl/fugazzeta");
-      
-      // Convert File to Blob if needed
-      const imageBlob = image instanceof Blob ? image : await image.arrayBuffer().then(b => new Blob([b]));
-      
-      const response = await client.predict("/predict", { 
-        img: imageBlob
+      const client: any = await Client.connect("jonorl/fugazzeta");
+
+      const fileToConvert = image as File;
+      const imageBlob =
+        fileToConvert instanceof Blob
+          ? fileToConvert
+          : await (fileToConvert as Blob)
+              .arrayBuffer()
+              .then((b: ArrayBuffer) => new Blob([b]));
+
+      // The 'response' type is generic, so we cast the final data.
+      const response = await client.predict("/predict", {
+        img: imageBlob,
       });
-      
-      console.log("API Response:", response);
-      console.log("Prediction data:", response.data[0]);
-      setResult(response.data[0]);
+
+      // 3. Fix the `setResult` error by casting the data
+      const predictionData = response.data[0] as GradioResult;
+
+      setResult(predictionData);
     } catch (err) {
       setError("Failed to analyze pizza. Please try again.");
       console.error("Error:", err);
@@ -98,7 +121,9 @@ export default function FugazzetaDetector() {
   };
 
   const isFugazzeta = result?.label === "fugazzeta";
-  const confidence = result?.confidences?.find(c => c.label === result?.label)?.confidence || 0;
+  const confidence =
+    result?.confidences?.find((c) => c.label === result?.label)?.confidence ||
+    0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-red-50">
@@ -106,10 +131,10 @@ export default function FugazzetaDetector() {
         {/* Language Toggle */}
         <div className="flex justify-end mb-4">
           <button
-            onClick={() => setLanguage(language === 'en' ? 'es' : 'en')}
+            onClick={() => setLanguage(language === "en" ? "es" : "en")}
             className="flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 rounded-lg shadow-sm transition-colors"
           >
-            <span className="text-sm">{language === 'en' ? 'ES' : 'EN'}</span>
+            <span className="text-sm">{language === "en" ? "ES" : "EN"}</span>
           </button>
         </div>
 
@@ -121,9 +146,7 @@ export default function FugazzetaDetector() {
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
             {t.title}
           </h1>
-          <p className="text-gray-600 text-sm sm:text-base">
-            {t.subtitle}
-          </p>
+          <p className="text-gray-600 text-sm sm:text-base">{t.subtitle}</p>
         </div>
 
         {/* Info Section */}
@@ -131,12 +154,8 @@ export default function FugazzetaDetector() {
           <h2 className="text-xl font-semibold text-gray-900 mb-3">
             {t.whatIs}
           </h2>
-          <p className="text-gray-700 leading-relaxed mb-4">
-            {t.description1}
-          </p>
-          <p className="text-gray-700 leading-relaxed">
-            {t.description2}
-          </p>
+          <p className="text-gray-700 leading-relaxed mb-4">{t.description1}</p>
+          <p className="text-gray-700 leading-relaxed">{t.description2}</p>
         </div>
 
         {/* Upload Section */}
@@ -144,7 +163,7 @@ export default function FugazzetaDetector() {
           <h2 className="text-xl font-semibold text-gray-900 mb-4">
             {t.testYourPizza}
           </h2>
-          
+
           <div className="space-y-4">
             {/* Upload Area */}
             <label className="block">
@@ -162,19 +181,13 @@ export default function FugazzetaDetector() {
                       alt="Preview"
                       className="max-h-64 mx-auto rounded-lg shadow-md"
                     />
-                    <p className="text-sm text-gray-600">
-                      {t.clickToChange}
-                    </p>
+                    <p className="text-sm text-gray-600">{t.clickToChange}</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
                     <Upload className="w-12 h-12 mx-auto text-gray-400" />
-                    <p className="text-gray-600 font-medium">
-                      {t.uploadImage}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      {t.fileTypes}
-                    </p>
+                    <p className="text-gray-600 font-medium">{t.uploadImage}</p>
+                    <p className="text-sm text-gray-500">{t.fileTypes}</p>
                   </div>
                 )}
               </div>
@@ -208,23 +221,29 @@ export default function FugazzetaDetector() {
             {/* Results */}
             {result && (
               <div className="space-y-4 pt-4">
-                <div className={`rounded-xl p-6 ${
-                  isFugazzeta 
-                    ? 'bg-green-50 border-2 border-green-200' 
-                    : 'bg-gray-50 border-2 border-gray-200'
-                }`}>
+                <div
+                  className={`rounded-xl p-6 ${
+                    isFugazzeta
+                      ? "bg-green-50 border-2 border-green-200"
+                      : "bg-gray-50 border-2 border-gray-200"
+                  }`}
+                >
                   <div className="text-center">
                     <p className="text-sm font-medium text-gray-600 mb-2">
                       {t.classificationResult}
                     </p>
-                    <p className={`text-2xl sm:text-3xl font-bold mb-3 ${
-                      isFugazzeta ? 'text-green-700' : 'text-gray-700'
-                    }`}>
+                    <p
+                      className={`text-2xl sm:text-3xl font-bold mb-3 ${
+                        isFugazzeta ? "text-green-700" : "text-gray-700"
+                      }`}
+                    >
                       {isFugazzeta ? t.isFugazzeta : t.notFugazzeta}
                     </p>
                     <div className="space-y-2">
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">{t.confidence}</span>
+                        <span className="text-sm text-gray-600">
+                          {t.confidence}
+                        </span>
                         <span className="text-lg font-semibold text-gray-900">
                           {(confidence * 100).toFixed(1)}%
                         </span>
@@ -232,7 +251,7 @@ export default function FugazzetaDetector() {
                       <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
                         <div
                           className={`h-full rounded-full transition-all duration-500 ${
-                            isFugazzeta ? 'bg-green-500' : 'bg-gray-400'
+                            isFugazzeta ? "bg-green-500" : "bg-gray-400"
                           }`}
                           style={{ width: `${confidence * 100}%` }}
                         />
