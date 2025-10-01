@@ -1,6 +1,10 @@
 # 🍕 Fugazzeta Detector
 
-A machine learning-powered web application that detects whether a pizza is a traditional Argentine fugazzeta or not. Built with React, TypeScript, and Vite, featuring a mobile-first design and bilingual support (English/Spanish).
+This repository features an image classification model capable of distinguishing between fugazzeta (an Argentine pizza variant) and standard pizza. The model was built using the fastai library, leveraging a pre-trained ResNet-18 architecture and fine-tuned over 4 epochs. The data pipeline included downloading images, verifying file integrity, and applying data augmentation techniques. The trained model, along with its learned weights, is saved in both the standard model.pkl for easy deployment and portability.
+
+This is my first AI/ML project following the [Practical Deep Learning for Coders](https://course.fast.ai/) course by Jeremy Howard.
+
+[Link to my HuggingFace repo](https://huggingface.co/spaces/jonorl/fugazzeta)
 
 ## What is a Fugazzeta?
 
@@ -8,7 +12,7 @@ Fugazzeta is a traditional Argentine pizza style originating from Buenos Aires. 
 
 ## Features
 
-- 🤖 **AI-Powered Classification**: Uses a custom-trained machine learning model to identify fugazzeta pizzas
+- 🤖 **AI-Powered Classification**: Uses a custom-trained machine learning based on fastAI to identify fugazzeta pizzas
 - 📱 **Mobile-First Design**: Responsive layout optimized for all screen sizes
 - 🌍 **Bilingual Support**: Toggle between English and Spanish
 - 📊 **Confidence Scores**: Shows prediction confidence with visual progress bars
@@ -22,7 +26,7 @@ Fugazzeta is a traditional Argentine pizza style originating from Buenos Aires. 
 - **Styling**: Tailwind CSS
 - **Icons**: Lucide React
 - **ML API**: Gradio Client (HuggingFace)
-- **Model**: Custom image classification model hosted on HuggingFace
+- **Model**: PyTorch / FastAI
 
 ## Getting Started
 
@@ -71,11 +75,8 @@ The production-ready files will be in the `dist` directory.
 ```
 fugazzeta-detector/
 ├── src/
-│   ├── components/
-│   │   └── FugazzetaDetector.tsx    # Main detector component
 │   ├── App.tsx                       # Root component
 │   └── main.tsx                      # Entry point
-├── public/                           # Static assets
 ├── package.json
 ├── vite.config.ts
 ├── tailwind.config.js
@@ -112,32 +113,6 @@ The model returns predictions with labels and confidence scores for classificati
 }
 ```
 
-## Customization
-
-### Changing Colors
-
-The color scheme uses Tailwind's color palette. To modify:
-
-1. Open `FugazzetaDetector.tsx`
-2. Replace color classes (e.g., `orange-600`, `amber-50`) with your preferred colors
-3. Update the gradient in the main container: `bg-gradient-to-br from-amber-50 via-orange-50 to-red-50`
-
-### Adding More Languages
-
-To add additional languages:
-
-1. Add a new language object to the `translations` object
-2. Update the language toggle button logic
-3. Add the language code to the state management
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## License
-
-This project is open source and available under the [MIT License](LICENSE).
-
 ## Acknowledgments
 
 - Built with [Vite](https://vitejs.dev/)
@@ -148,7 +123,3 @@ This project is open source and available under the [MIT License](LICENSE).
 ## Contact
 
 For questions or feedback, please open an issue on GitHub.
-
----
-
-Made with 🍕 and ❤️
