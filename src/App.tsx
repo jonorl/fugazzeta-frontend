@@ -54,7 +54,7 @@ export default function FugazzetaDetector() {
       description2:
         "A diferencia de la pizza común, la fugazzeta tiene queso tanto dentro de la masa como encima, creando una experiencia única de doble queso que la distingue de otros estilos de pizza.",
       testYourPizza: "Es tu pizza una fugazzeta?",
-      uploadImage: "Subi una imagen de pizza",
+      uploadImage: "Subi una imagen de una pizza",
       fileTypes: "PNG, JPG hasta 10MB",
       clickToChange: "Hace click para cambiar la imagen",
       analyzePizza: "Analizar Pizza",
