@@ -94,7 +94,7 @@ export default function FugazzetaDetector() {
     setError(null);
 
     try {
-      const client: any = await Client.connect("jonorl/fugazzeta");
+      const client: any = await Client.connect("jonorl/fugazzetav2");
 
       const fileToConvert = image as File;
       const imageBlob =
