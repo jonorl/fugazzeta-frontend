@@ -96,15 +96,19 @@ const analyzePizza = async () => {
   try {
     const client = await Client.connect("jonorl/fugazzeta");
 
-    // The image is already a File/Blob from handleImageChange
-    // Pass it as an array [image], NOT an object {img: image}
-    const response = await client.predict("/predict", [ 
+    // 1. Use 0 instead of "/predict" to target the first function
+    // 2. Pass the image inside an array [image]
+    const response = await client.predict(0, [ 
       image, 
     ]);
 
-    const data = response.data as [GradioResult];
-    const predictionData = data[0];
-    setResult(predictionData);
+    // 3. Cast the response.data to match your JSON structure
+    const data = response.data as [{
+      label: string;
+      confidences: Array<{ label: string; confidence: number }>;
+    }];
+
+    setResult(data[0]);
   } catch (err) {
     setError("Failed to analyze pizza. Please try again.");
     console.error("Error:", err);
