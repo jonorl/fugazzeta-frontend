@@ -87,39 +87,31 @@ export default function FugazzetaDetector() {
     }
   };
 
-  const analyzePizza = async () => {
-    if (!image) return;
+const analyzePizza = async () => {
+  if (!image) return;
 
-    setLoading(true);
-    setError(null);
+  setLoading(true);
+  setError(null);
 
-    try {
-      const client: any = await Client.connect("jonorl/fugazzeta");
+  try {
+    const client = await Client.connect("jonorl/fugazzeta");
 
-      const fileToConvert = image as File;
-      const imageBlob =
-        fileToConvert instanceof Blob
-          ? fileToConvert
-          : await (fileToConvert as Blob)
-              .arrayBuffer()
-              .then((b: ArrayBuffer) => new Blob([b]));
+    // The image is already a File/Blob from handleImageChange
+    // Pass it as an array [image], NOT an object {img: image}
+    const response = await client.predict("/predict", [ 
+      image, 
+    ]);
 
-      // The 'response' type is generic, so we cast the final data.
-      const response = await client.predict(0, { 
-        img: imageBlob, 
-      });
-
-      // 3. Fix the `setResult` error by casting the data
-      const predictionData = response.data[0] as GradioResult;
-
-      setResult(predictionData);
-    } catch (err) {
-      setError("Failed to analyze pizza. Please try again.");
-      console.error("Error:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const data = response.data as [GradioResult];
+    const predictionData = data[0];
+    setResult(predictionData);
+  } catch (err) {
+    setError("Failed to analyze pizza. Please try again.");
+    console.error("Error:", err);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const isFugazzeta = result?.label === "fugazzeta";
   const confidence =
