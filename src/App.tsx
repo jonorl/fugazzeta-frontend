@@ -105,8 +105,8 @@ export default function FugazzetaDetector() {
               .then((b: ArrayBuffer) => new Blob([b]));
 
       // The 'response' type is generic, so we cast the final data.
-      const response = await client.predict("/predict/classify_image", {
-        img: imageBlob,
+      const response = await client.predict(0, { 
+        img: imageBlob, 
       });
 
       // 3. Fix the `setResult` error by casting the data
