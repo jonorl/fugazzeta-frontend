@@ -89,29 +89,24 @@ export default function FugazzetaDetector() {
 
 const analyzePizza = async () => {
   if (!image) return;
-
   setLoading(true);
   setError(null);
 
   try {
     const client = await Client.connect("jonorl/fugazzeta");
 
-    // 1. Use 0 instead of "/predict" to target the first function
-    // 2. Pass the image inside an array [image]
-    const response = await client.predict(0, [ 
-      image, 
-    ]);
+    // We use the exact naming from your HF instruction
+    const result = await client.predict("/classify_image", { 
+      img: image, // 'image' is already a File/Blob from your handleImageChange
+    });
 
-    // 3. Cast the response.data to match your JSON structure
-    const data = response.data as [{
-      label: string;
-      confidences: Array<{ label: string; confidence: number }>;
-    }];
-
-    setResult(data[0]);
+    // FIX: Cast 'result.data' to the correct shape to solve the TS unknown error
+    const predictionData = (result.data as [GradioResult])[0];
+    
+    setResult(predictionData);
   } catch (err) {
-    setError("Failed to analyze pizza. Please try again.");
-    console.error("Error:", err);
+    setError(t.errorMessage);
+    console.error("Connection Error:", err);
   } finally {
     setLoading(false);
   }
