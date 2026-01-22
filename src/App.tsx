@@ -94,7 +94,7 @@ export default function FugazzetaDetector() {
     setError(null);
 
     try {
-      const client: any = await Client.connect("jonorl/fugazzetav2");
+      const client: any = await Client.connect("jonorl/fugazzeta");
 
       const fileToConvert = image as File;
       const imageBlob =
@@ -105,7 +105,7 @@ export default function FugazzetaDetector() {
               .then((b: ArrayBuffer) => new Blob([b]));
 
       // The 'response' type is generic, so we cast the final data.
-      const response = await client.predict("/predict", {
+      const response = await client.predict("/predict/classify_image", {
         img: imageBlob,
       });
 
