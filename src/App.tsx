@@ -1,7 +1,8 @@
-import { useState } from "react";
-import { Upload, Loader2, Pizza } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Upload, Loader2, Pizza, AlertCircle, Power } from "lucide-react";
 import { FaGithub } from "react-icons/fa";
 const { Client } = await import("@gradio/client");
+import { SiHuggingface } from "react-icons/si";
 
 interface Confidence {
   label: string;
@@ -13,6 +14,8 @@ interface GradioResult {
   confidences: Confidence[];
 }
 
+type SpaceStatus = "checking" | "ready" | "sleeping" | "error";
+
 export default function FugazzetaDetector() {
   const [image, setImage] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -20,6 +23,8 @@ export default function FugazzetaDetector() {
   const [result, setResult] = useState<GradioResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [language, setLanguage] = useState("en");
+  const [spaceStatus, setSpaceStatus] = useState<SpaceStatus>("checking");
+  const [wakingUp, setWakingUp] = useState(false);
 
   const translations = {
     en: {
@@ -42,8 +47,14 @@ export default function FugazzetaDetector() {
       notFugazzeta: "❌ Not a Fugazzeta",
       confidence: "Confidence:",
       tryAnother: "Try Another Pizza",
-      footer:
-        "Powered by machine learning (fastAI) • Project by Jonathan Orlowski",
+      footer: "Powered by machine learning (fastAI)",
+      statusReady: "Model Ready",
+      statusSleeping: "Model Sleeping",
+      statusChecking: "Checking Status...",
+      statusError: "Connection Error",
+      wakeUpButton: "Wake Up Model",
+      wakingUp: "Waking up model...",
+      sleepingMessage: "The AI model is currently sleeping. Click the button below to wake it up (this may take 30-60 seconds).",
     },
     es: {
       title: "Detector de Fugazzeta",
@@ -66,12 +77,49 @@ export default function FugazzetaDetector() {
       notFugazzeta: "❌ No es una Fugazzeta",
       confidence: "Confianza:",
       tryAnother: "Probar Otra Pizza",
-      footer:
-        "Hecho con machine learning (fastAI) • Proyecto hecho por Jonathan Orlowski",
+      footer: "Hecho con machine learning (fastAI)",
+      statusReady: "Modelo Listo",
+      statusSleeping: "Modelo Durmiendo",
+      statusChecking: "Verificando Estado...",
+      statusError: "Error de Conexión",
+      wakeUpButton: "Despertar Modelo",
+      wakingUp: "Despertando modelo...",
+      sleepingMessage: "El modelo de IA está durmiendo actualmente. Haz clic en el botón de abajo para despertarlo (puede tardar 30-60 segundos).",
     },
   };
 
   const t = translations[language as keyof typeof translations];
+
+  // Check space status on mount
+  useEffect(() => {
+    checkSpaceStatus();
+  }, []);
+
+  const checkSpaceStatus = async () => {
+    setSpaceStatus("checking");
+    try {
+      await Client.connect("jonorl/fugazzeta");
+      setSpaceStatus("ready");
+    } catch (err) {
+      console.error("Status check error:", err);
+      setSpaceStatus("sleeping");
+    }
+  };
+
+  const wakeUpSpace = async () => {
+    setWakingUp(true);
+    try {
+      // Connecting to the space will wake it up
+      await Client.connect("jonorl/fugazzeta");
+      setSpaceStatus("ready");
+    } catch (err) {
+      console.error("Wake up error:", err);
+      setSpaceStatus("error");
+    } finally {
+      setWakingUp(false);
+    }
+  };
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -87,35 +135,75 @@ export default function FugazzetaDetector() {
     }
   };
 
-const analyzePizza = async () => {
-  if (!image) return;
-  setLoading(true);
-  setError(null);
+  const analyzePizza = async () => {
+    if (!image) return;
+    setLoading(true);
+    setError(null);
 
-  try {
-    const client = await Client.connect("jonorl/fugazzeta");
+    try {
+      const client = await Client.connect("jonorl/fugazzeta");
 
-    // We use the exact naming from your HF instruction
-    const result = await client.predict("/classify_image", { 
-      img: image, // 'image' is already a File/Blob from your handleImageChange
-    });
+      const result = await client.predict("/classify_image", {
+        img: image,
+      });
 
-    // FIX: Cast 'result.data' to the correct shape to solve the TS unknown error
-    const predictionData = (result.data as [GradioResult])[0];
-    
-    setResult(predictionData);
-  } catch (err) {
-    setError(t.errorMessage);
-    console.error("Connection Error:", err);
-  } finally {
-    setLoading(false);
-  }
-};
+      const predictionData = (result.data as [GradioResult])[0];
+
+      setResult(predictionData);
+      setSpaceStatus("ready");
+    } catch (err) {
+      setError(t.errorMessage);
+      console.error("Connection Error:", err);
+      // If analysis fails, space might be sleeping
+      setSpaceStatus("sleeping");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const isFugazzeta = result?.label === "fugazzeta";
   const confidence =
     result?.confidences?.find((c) => c.label === result?.label)?.confidence ||
     0;
+
+  const getStatusColor = () => {
+    switch (spaceStatus) {
+      case "ready":
+        return "bg-green-100 border-green-300 text-green-800";
+      case "sleeping":
+        return "bg-yellow-100 border-yellow-300 text-yellow-800";
+      case "checking":
+        return "bg-blue-100 border-blue-300 text-blue-800";
+      case "error":
+        return "bg-red-100 border-red-300 text-red-800";
+    }
+  };
+
+  const getStatusIcon = () => {
+    switch (spaceStatus) {
+      case "ready":
+        return <Power className="w-4 h-4" />;
+      case "sleeping":
+        return <AlertCircle className="w-4 h-4" />;
+      case "checking":
+        return <Loader2 className="w-4 h-4 animate-spin" />;
+      case "error":
+        return <AlertCircle className="w-4 h-4" />;
+    }
+  };
+
+  const getStatusText = () => {
+    switch (spaceStatus) {
+      case "ready":
+        return t.statusReady;
+      case "sleeping":
+        return t.statusSleeping;
+      case "checking":
+        return t.statusChecking;
+      case "error":
+        return t.statusError;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-red-50">
@@ -150,6 +238,33 @@ const analyzePizza = async () => {
           <p className="text-gray-700 leading-relaxed">{t.description2}</p>
         </div>
 
+        {/* Status Banner */}
+        <div className={`rounded-xl p-4 mb-6 border-2 ${getStatusColor()}`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {getStatusIcon()}
+              <span className="font-medium text-sm">{getStatusText()}</span>
+            </div>
+            {spaceStatus === "sleeping" && !wakingUp && (
+              <button
+                onClick={wakeUpSpace}
+                className="bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-medium py-1.5 px-4 rounded-lg transition-colors"
+              >
+                {t.wakeUpButton}
+              </button>
+            )}
+            {wakingUp && (
+              <span className="text-sm flex items-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                {t.wakingUp}
+              </span>
+            )}
+          </div>
+          {spaceStatus === "sleeping" && (
+            <p className="text-sm mt-2 opacity-90">{t.sleepingMessage}</p>
+          )}
+        </div>
+
         {/* Upload Section */}
         <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">
@@ -164,8 +279,15 @@ const analyzePizza = async () => {
                 accept="image/*"
                 onChange={handleImageChange}
                 className="hidden"
+                disabled={spaceStatus !== "ready"}
               />
-              <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 sm:p-12 text-center cursor-pointer hover:border-orange-400 hover:bg-orange-50 transition-colors">
+              <div
+                className={`border-2 border-dashed rounded-xl p-8 sm:p-12 text-center transition-colors ${
+                  spaceStatus === "ready"
+                    ? "border-gray-300 cursor-pointer hover:border-orange-400 hover:bg-orange-50"
+                    : "border-gray-200 bg-gray-50 cursor-not-allowed opacity-60"
+                }`}
+              >
                 {preview ? (
                   <div className="space-y-4">
                     <img
@@ -173,7 +295,9 @@ const analyzePizza = async () => {
                       alt="Preview"
                       className="max-h-64 mx-auto rounded-lg shadow-md"
                     />
-                    <p className="text-sm text-gray-600">{t.clickToChange}</p>
+                    {spaceStatus === "ready" && (
+                      <p className="text-sm text-gray-600">{t.clickToChange}</p>
+                    )}
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -186,7 +310,7 @@ const analyzePizza = async () => {
             </label>
 
             {/* Analyze Button */}
-            {image && !loading && !result && (
+            {image && !loading && !result && spaceStatus === "ready" && (
               <button
                 onClick={analyzePizza}
                 className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors shadow-md"
@@ -271,13 +395,29 @@ const analyzePizza = async () => {
         <div className="text-center mt-8 text-sm text-gray-600">
           <p>{t.footer}</p>
           <a
-              href="https://github.com/jonorl/fugazzeta-frontend"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center align-middle ml-2 hover:text-white/80"
-            >
-              <FaGithub className="mb-1" aria-label="GitHub" />
-            </a>
+            href="https://jonathan-orlowski.pages.dev/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-gray-400 hover:text-yellow-400 transition-colors"
+          >
+            Jonathan Orlowski
+          </a>
+          <a
+            href="https://github.com/jonorl/fugazzeta-frontend"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center align-middle ml-2 hover:text-white/80"
+          >
+            <FaGithub className="mb-1" aria-label="GitHub" />
+          </a>
+          <a
+            href="https://huggingface.co/spaces/jonorl/fugazzeta"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center align-middle ml-2 hover:text-white/80"
+          >
+            <SiHuggingface className="mb-1" aria-label="HuggingFace" />
+          </a>
         </div>
       </div>
     </div>

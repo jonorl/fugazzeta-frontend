@@ -1,6 +1,6 @@
-# 🍕 Fugazzeta Detector
+# Fugazzeta Detector
 
-This repository features an image classification model capable of distinguishing between fugazzeta (an Argentine pizza variant) and standard pizza. The model was built using the fastai library, leveraging a pre-trained ResNet-18 architecture and fine-tuned over 4 epochs. The data pipeline included downloading images, verifying file integrity, and applying data augmentation techniques. The trained model, along with its learned weights, is saved in both the standard model.pkl for easy deployment and portability.
+This repository features an image classification model capable of distinguishing between fugazzeta (an Argentine pizza variant) and standard pizza. The model was built using the fastai library, leveraging a pre-trained convnext_tiny architecture and fine-tuned over 4 epochs. The data pipeline included downloading images, verifying file integrity, and applying data augmentation techniques. The trained model, along with its learned weights, is saved in both the standard model.pkl for easy deployment and portability.
 
 This is my first AI/ML project following the [Practical Deep Learning for Coders](https://course.fast.ai/) course by Jeremy Howard.
 
@@ -12,12 +12,12 @@ Fugazzeta is a traditional Argentine pizza style originating from Buenos Aires. 
 
 ## Features
 
-- 🤖 **AI-Powered Classification**: Uses a custom-trained machine learning based on fastAI to identify fugazzeta pizzas
-- 📱 **Mobile-First Design**: Responsive layout optimized for all screen sizes
-- 🌍 **Bilingual Support**: Toggle between English and Spanish
-- 📊 **Confidence Scores**: Shows prediction confidence with visual progress bars
-- 🎨 **Pizza-Themed UI**: Warm, inviting color scheme with smooth animations
-- ⚡ **Fast & Lightweight**: Built with Vite for optimal performance
+- **AI-Powered Classification**: Uses a custom-trained machine learning based on fastAI to identify fugazzeta pizzas
+- **Mobile-First Design**: Responsive layout optimized for all screen sizes
+- **Bilingual Support**: Toggle between English and Spanish
+- **Confidence Scores**: Shows prediction confidence with visual progress bars
+- **Pizza-Themed UI**: Warm, inviting color scheme with smooth animations
+- **Fast & Lightweight**: Built with Vite for optimal performance
 
 ## Tech Stack
 
@@ -27,12 +27,6 @@ Fugazzeta is a traditional Argentine pizza style originating from Buenos Aires. 
 - **Icons**: Lucide React
 - **ML API**: Gradio Client (HuggingFace)
 - **Model**: PyTorch / FastAI
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js 18+ and npm/yarn/pnpm
 
 ### Installation
 
@@ -113,13 +107,6 @@ The model returns predictions with labels and confidence scores for classificati
 }
 ```
 
-## Acknowledgments
-
-- Built with [Vite](https://vitejs.dev/)
-- ML model hosted on [HuggingFace](https://huggingface.co/)
-- Icons by [Lucide](https://lucide.dev/)
-- Inspired by the delicious Argentine pizza tradition
-
 ## Contact
 
-For questions or feedback, please open an issue on GitHub.
+[Jonathan Orlowski](https://jonathan-orlowski.pages.dev/)
