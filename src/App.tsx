@@ -99,7 +99,9 @@ export default function FugazzetaDetector() {
   const checkSpaceStatus = async () => {
     setSpaceStatus("checking");
     try {
-      await Client.connect("jonorl/fugazzeta");
+      await Client.connect("jonorl/fugazzeta", {
+        hf_token: import.meta.env.VITE_HF_TOKEN,}
+      );
       setSpaceStatus("ready");
     } catch (err) {
       console.error("Status check error:", err);
@@ -111,7 +113,9 @@ export default function FugazzetaDetector() {
     setWakingUp(true);
     try {
       // Connecting to the space will wake it up
-      await Client.connect("jonorl/fugazzeta");
+      await Client.connect("jonorl/fugazzeta", {
+        hf_token: import.meta.env.VITE_HF_TOKEN,
+      });
       setSpaceStatus("ready");
     } catch (err) {
       console.error("Wake up error:", err);
@@ -143,7 +147,7 @@ export default function FugazzetaDetector() {
 
     try {
       const client = await Client.connect("jonorl/fugazzeta", {
-        auth: import.meta.env.VITE_HF_TOKEN,
+        hf_token: import.meta.env.VITE_HF_TOKEN,
       });
 
       const result = await client.predict("/classify_image", {
