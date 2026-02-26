@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { Upload, Loader2, Pizza, AlertCircle, Power } from "lucide-react";
 import { FaGithub } from "react-icons/fa";
-const { Client } = await import("@gradio/client");
 import { SiHuggingface } from "react-icons/si";
+
+const { Client } = await import("@gradio/client");
 
 interface Confidence {
   label: string;
@@ -141,7 +142,9 @@ export default function FugazzetaDetector() {
     setError(null);
 
     try {
-      const client = await Client.connect("jonorl/fugazzeta");
+      const client = await Client.connect("jonorl/fugazzeta", {
+        auth: import.meta.env.VITE_HF_TOKEN,
+      });
 
       const result = await client.predict("/classify_image", {
         img: image,
