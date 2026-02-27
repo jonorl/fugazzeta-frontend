@@ -402,7 +402,7 @@ export default function FugazzetaDetector() {
         <div className="text-center mt-8 text-sm text-gray-600">
           <p>{t.footer}</p>
           <a
-            href="https://jonathan-orlowski.pages.dev/"
+            href="https://jonathan-orlowski.dev/"
             target="_blank"
             rel="noopener noreferrer"
             className="text-gray-400 hover:text-yellow-400 transition-colors"
