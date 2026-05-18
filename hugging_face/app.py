@@ -1,11 +1,11 @@
 import gradio as gr
 from fastai.vision.all import *
 
-# 1. Load the entire learner directly
-# This assumes you used learn.export('model.pkl')
+# 1. Force PyTorch to load the pickle file directly onto the CPU
 try:
-    learn = load_learner('model.pkl')
-    print("Successfully loaded learner.")
+    # This overrides the hardware mapping during unpickling
+    learn = load_learner('model.pkl', cpu=True)
+    print("Successfully loaded learner onto CPU.")
 except Exception as e:
     print(f"Load failed: {e}")
     raise e
@@ -13,8 +13,6 @@ except Exception as e:
 # 2. Prediction function
 def classify_image(img):
     if img is None: return None
-    # fastai's load_learner expects a PIL image or path
-    # and handles resizing based on the original training transforms
     pred, idx, probs = learn.predict(img)
     return dict(zip(learn.dls.vocab, map(float, probs)))
 
@@ -26,5 +24,12 @@ interface = gr.Interface(
     title="Pizza vs Fugazzeta Classifier"
 )
 
+# 4. Correctly bind the Gradio runtime inside Docker
 if __name__ == "__main__":
-    interface.launch()
+    port = 7861
+    print(f"Launching Gradio app on port {port}...")
+    interface.launch(
+        server_name="0.0.0.0", 
+        server_port=port,
+        share=False
+    )
