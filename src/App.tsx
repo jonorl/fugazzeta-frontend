@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
-import { Upload, Loader2, Pizza, AlertCircle, Power } from "lucide-react";
+import { useState } from "react";
+import { Upload, Loader2, Pizza} from "lucide-react";
 import { FaGithub } from "react-icons/fa";
 import { SiHuggingface } from "react-icons/si";
+import { translations } from "./consts/translations";
 
 const { Client } = await import("@gradio/client");
 
@@ -15,8 +16,6 @@ interface GradioResult {
   confidences: Confidence[];
 }
 
-type SpaceStatus = "checking" | "ready" | "sleeping" | "error";
-
 export default function FugazzetaDetector() {
   const [image, setImage] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -24,106 +23,9 @@ export default function FugazzetaDetector() {
   const [result, setResult] = useState<GradioResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [language, setLanguage] = useState("en");
-  const [spaceStatus, setSpaceStatus] = useState<SpaceStatus>("checking");
-  const [wakingUp, setWakingUp] = useState(false);
 
-  const translations = {
-    en: {
-      title: "Fugazzeta Detector",
-      subtitle: "AI-powered pizza classification",
-      whatIs: "What is a Fugazzeta?",
-      description1:
-        "Fugazzeta is a traditional Argentine pizza style, originating from Buenos Aires. It's characterized by its thick, fluffy dough filled with mozzarella cheese, topped with onions, and often finished with oregano and olive oil.",
-      description2:
-        "Unlike regular pizza, fugazzeta has cheese both inside the dough and on top, creating a unique double-cheese experience that sets it apart from other pizza styles.",
-      testYourPizza: "Test Your Pizza",
-      uploadImage: "Upload a pizza image",
-      fileTypes: "PNG, JPG up to 10MB",
-      clickToChange: "Click to change image",
-      analyzePizza: "Analyze Pizza",
-      analyzing: "Analyzing...",
-      errorMessage: "Failed to analyze pizza. Please try again.",
-      classificationResult: "Classification Result",
-      isFugazzeta: "🎉 It's a Fugazzeta!",
-      notFugazzeta: "❌ Not a Fugazzeta",
-      confidence: "Confidence:",
-      tryAnother: "Try Another Pizza",
-      footer: "Powered by machine learning (fastAI)",
-      statusReady: "Model Ready",
-      statusSleeping: "Model Sleeping",
-      statusChecking: "Checking Status...",
-      statusError: "Connection Error",
-      wakeUpButton: "Wake Up Model",
-      wakingUp: "Waking up model...",
-      sleepingMessage: "The AI model is currently sleeping. Click the button below to wake it up (this may take 30-60 seconds).",
-    },
-    es: {
-      title: "Detector de Fugazzeta",
-      subtitle: "Clasificación de pizza con inteligencia artificial",
-      whatIs: "¿Qué es una Fugazzeta?",
-      description1:
-        "La fugazzeta es un estilo tradicional de pizza argentina, originario de Buenos Aires. Se caracteriza por su masa gruesa y esponjosa rellena de queso muzzarella, cubierta con cebollas, orégano y aceite de oliva.",
-      description2:
-        "A diferencia de la pizza común, la fugazzeta tiene queso tanto dentro de la masa como encima, creando una experiencia única de doble queso que la distingue de otros estilos de pizza.",
-      testYourPizza: "Es tu pizza una fugazzeta?",
-      uploadImage: "Subi una imagen de una pizza",
-      fileTypes: "PNG, JPG hasta 10MB",
-      clickToChange: "Hace click para cambiar la imagen",
-      analyzePizza: "Analizar Pizza",
-      analyzing: "Analizando...",
-      errorMessage:
-        "Error al analizar la pizza. Por favor, inténtalo de nuevo.",
-      classificationResult: "Resultado del analisis",
-      isFugazzeta: "🎉 ¡Es una Fugazzeta!",
-      notFugazzeta: "❌ No es una Fugazzeta",
-      confidence: "Confianza:",
-      tryAnother: "Probar Otra Pizza",
-      footer: "Hecho con machine learning (fastAI)",
-      statusReady: "Modelo Listo",
-      statusSleeping: "Modelo Durmiendo",
-      statusChecking: "Verificando Estado...",
-      statusError: "Error de Conexión",
-      wakeUpButton: "Despertar Modelo",
-      wakingUp: "Despertando modelo...",
-      sleepingMessage: "El modelo de IA está durmiendo actualmente. Haz clic en el botón de abajo para despertarlo (puede tardar 30-60 segundos).",
-    },
-  };
 
   const t = translations[language as keyof typeof translations];
-
-  // Check space status on mount
-  useEffect(() => {
-    checkSpaceStatus();
-  }, []);
-
-  const checkSpaceStatus = async () => {
-    setSpaceStatus("checking");
-    try {
-      await Client.connect("jonorl/fugazzeta", {
-        hf_token: import.meta.env.VITE_HF_TOKEN,}
-      );
-      setSpaceStatus("ready");
-    } catch (err) {
-      console.error("Status check error:", err);
-      setSpaceStatus("sleeping");
-    }
-  };
-
-  const wakeUpSpace = async () => {
-    setWakingUp(true);
-    try {
-      // Connecting to the space will wake it up
-      await Client.connect("jonorl/fugazzeta", {
-        hf_token: import.meta.env.VITE_HF_TOKEN,
-      });
-      setSpaceStatus("ready");
-    } catch (err) {
-      console.error("Wake up error:", err);
-      setSpaceStatus("error");
-    } finally {
-      setWakingUp(false);
-    }
-  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -146,9 +48,7 @@ export default function FugazzetaDetector() {
     setError(null);
 
     try {
-      const client = await Client.connect("jonorl/fugazzeta", {
-        hf_token: import.meta.env.VITE_HF_TOKEN,
-      });
+      const client = await Client.connect("https://pizza.jonathan-orlowski.dev");
 
       const result = await client.predict("/classify_image", {
         img: image,
@@ -157,12 +57,10 @@ export default function FugazzetaDetector() {
       const predictionData = (result.data as [GradioResult])[0];
 
       setResult(predictionData);
-      setSpaceStatus("ready");
     } catch (err) {
       setError(t.errorMessage);
       console.error("Connection Error:", err);
       // If analysis fails, space might be sleeping
-      setSpaceStatus("sleeping");
     } finally {
       setLoading(false);
     }
@@ -172,45 +70,6 @@ export default function FugazzetaDetector() {
   const confidence =
     result?.confidences?.find((c) => c.label === result?.label)?.confidence ||
     0;
-
-  const getStatusColor = () => {
-    switch (spaceStatus) {
-      case "ready":
-        return "bg-green-100 border-green-300 text-green-800";
-      case "sleeping":
-        return "bg-yellow-100 border-yellow-300 text-yellow-800";
-      case "checking":
-        return "bg-blue-100 border-blue-300 text-blue-800";
-      case "error":
-        return "bg-red-100 border-red-300 text-red-800";
-    }
-  };
-
-  const getStatusIcon = () => {
-    switch (spaceStatus) {
-      case "ready":
-        return <Power className="w-4 h-4" />;
-      case "sleeping":
-        return <AlertCircle className="w-4 h-4" />;
-      case "checking":
-        return <Loader2 className="w-4 h-4 animate-spin" />;
-      case "error":
-        return <AlertCircle className="w-4 h-4" />;
-    }
-  };
-
-  const getStatusText = () => {
-    switch (spaceStatus) {
-      case "ready":
-        return t.statusReady;
-      case "sleeping":
-        return t.statusSleeping;
-      case "checking":
-        return t.statusChecking;
-      case "error":
-        return t.statusError;
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-red-50">
@@ -245,33 +104,6 @@ export default function FugazzetaDetector() {
           <p className="text-gray-700 leading-relaxed">{t.description2}</p>
         </div>
 
-        {/* Status Banner */}
-        <div className={`rounded-xl p-4 mb-6 border-2 ${getStatusColor()}`}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              {getStatusIcon()}
-              <span className="font-medium text-sm">{getStatusText()}</span>
-            </div>
-            {spaceStatus === "sleeping" && !wakingUp && (
-              <button
-                onClick={wakeUpSpace}
-                className="bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-medium py-1.5 px-4 rounded-lg transition-colors"
-              >
-                {t.wakeUpButton}
-              </button>
-            )}
-            {wakingUp && (
-              <span className="text-sm flex items-center gap-2">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                {t.wakingUp}
-              </span>
-            )}
-          </div>
-          {spaceStatus === "sleeping" && (
-            <p className="text-sm mt-2 opacity-90">{t.sleepingMessage}</p>
-          )}
-        </div>
-
         {/* Upload Section */}
         <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">
@@ -286,14 +118,9 @@ export default function FugazzetaDetector() {
                 accept="image/*"
                 onChange={handleImageChange}
                 className="hidden"
-                disabled={spaceStatus !== "ready"}
               />
               <div
-                className={`border-2 border-dashed rounded-xl p-8 sm:p-12 text-center transition-colors ${
-                  spaceStatus === "ready"
-                    ? "border-gray-300 cursor-pointer hover:border-orange-400 hover:bg-orange-50"
-                    : "border-gray-200 bg-gray-50 cursor-not-allowed opacity-60"
-                }`}
+                className={`border-2 border-dashed rounded-xl p-8 sm:p-12 text-center transition-colors`}
               >
                 {preview ? (
                   <div className="space-y-4">
@@ -302,9 +129,9 @@ export default function FugazzetaDetector() {
                       alt="Preview"
                       className="max-h-64 mx-auto rounded-lg shadow-md"
                     />
-                    {spaceStatus === "ready" && (
+
                       <p className="text-sm text-gray-600">{t.clickToChange}</p>
-                    )}
+                    
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -317,7 +144,7 @@ export default function FugazzetaDetector() {
             </label>
 
             {/* Analyze Button */}
-            {image && !loading && !result && spaceStatus === "ready" && (
+            {image && !loading && !result && (
               <button
                 onClick={analyzePizza}
                 className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors shadow-md"
