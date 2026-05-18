@@ -51,7 +51,7 @@ export default function FugazzetaDetector() {
       const client = await Client.connect("https://pizza.jonathan-orlowski.dev");
 
       const result = await client.predict("/classify_image", {
-        img: image,
+        img_path: image,
       });
 
       const predictionData = (result.data as [GradioResult])[0];
