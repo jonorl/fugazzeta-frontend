@@ -4,7 +4,7 @@ from PIL import Image as PILImage
 import torchvision.transforms.functional as TF
 
 try:
-    learn = load_learner('./models/pizza/model.pkl', cpu=True)
+    learn = load_learner('./models/model.pkl', cpu=True)
     print("Successfully loaded learner onto CPU.")
     print(f"Classes: {learn.dls.vocab}")
 except Exception as e:
