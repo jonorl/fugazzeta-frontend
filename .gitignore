@@ -24,8 +24,8 @@ dist-ssr
 *.sw?
 .env
 *.pkl
-/hugging_face/*.pkl
-/hugging_face/fugazzeta_or_pizza/
-/hugging_face/models
-/hugging_face/fugazzeta.jpg
-/hugging_face/fuga12.png
+/server/*.pkl
+/server/fugazzeta_or_pizza/
+/server/models
+/server/fugazzeta.jpg
+/server/fuga12.png
