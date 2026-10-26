@@ -4,8 +4,6 @@ import { FaGithub } from "react-icons/fa";
 import { SiHuggingface } from "react-icons/si";
 import { translations } from "./consts/translations";
 
-const { Client } = await import("@gradio/client");
-
 interface Confidence {
   label: string;
   confidence: number;
@@ -48,6 +46,9 @@ export default function FugazzetaDetector() {
     setError(null);
 
     try {
+      // Loaded on demand so the page renders before the Gradio client is fetched, and so Jest can mock it
+      // (it cannot run a top-level await).
+      const { Client } = await import("@gradio/client");
       const client = await Client.connect("https://pizza.jonathan-orlowski.dev");
 
       const result = await client.predict("/classify_image", {

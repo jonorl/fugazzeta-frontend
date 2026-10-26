@@ -1,0 +1,57 @@
+version: 2
+
+# Minor and patch bumps arrive as one PR per ecosystem so the weekly run stays reviewable; majors come separately
+# because they are the ones that break things.
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: America/Argentina/Buenos_Aires
+    groups:
+      web-minor-patch:
+        update-types: [minor, patch]
+    ignore:
+      # Jest 30's own Babel preset still requires Babel 7.
+      - dependency-name: "@babel/*"
+        update-types: ["version-update:semver-major"]
+      # typescript-eslint supports TypeScript below 6.1 only; lift this once it supports newer versions.
+      - dependency-name: typescript
+        versions: [">=6.1.0"]
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: pip
+    directory: /server
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: America/Argentina/Buenos_Aires
+    groups:
+      server-minor-patch:
+        update-types: [minor, patch]
+    ignore:
+      # The CPU-only build comes from the PyTorch index with a +cpu suffix, which Dependabot cannot resolve.
+      - dependency-name: torch
+      # The Dockerfile force-reinstalls Pillow 10.4.0 after the requirements, so a bump here would never ship.
+      - dependency-name: pillow
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: docker
+    directory: /server
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: America/Argentina/Buenos_Aires
+    ignore:
+      # A new Python minor needs matching torch and fastai wheels; move it by hand.
+      - dependency-name: python
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns: ["*"]

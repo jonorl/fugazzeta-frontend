@@ -1,0 +1,13 @@
+# Cloudflare Pages applies these to every response. The CSP is report-only for now: browsers log what it would
+# block in the console. Once an analysis runs clean, rename the header to Content-Security-Policy.
+# The model is served by Gradio on pizza.jonathan-orlowski.dev; the image preview is a data: URL.
+/*
+  Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' https://www.googletagmanager.com; style-src 'self'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://pizza.jonathan-orlowski.dev https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com; form-action 'self'; frame-ancestors 'none'; base-uri 'self'; object-src 'none'
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
+
+# Built files carry a content hash in their name, so a changed file always gets a new name.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable

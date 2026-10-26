@@ -96,6 +96,8 @@ The model returns predictions with labels and confidence scores for classificati
 - `npm run build` - Build for production
 - `npm run preview` - Preview production build locally
 - `npm run lint` - Run ESLint
+- `npm run typecheck` - Type-check without building
+- `npm test` - Run the Jest tests (`test:watch`, `test:coverage` also available)
 
 ### Dependencies
 
