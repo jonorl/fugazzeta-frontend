@@ -1,4 +1,8 @@
+import os
+
 import gradio as gr
+import uvicorn
+from fastapi import FastAPI
 from fastai.vision.all import *
 from PIL import Image as PILImage
 import torchvision.transforms.functional as TF
@@ -42,11 +46,18 @@ interface = gr.Interface(
     title="Pizza vs Fugazzeta Classifier"
 )
 
+app = FastAPI()
+
+# The process exits if the model fails to load, so answering at all means it is ready. version is the commit the
+# image was built from, so the deploy's smoke test can tell the new container is the one answering.
+@app.get("/health")
+def health():
+    return {"status": "ok", "classes": list(learn.dls.vocab), "version": os.environ.get("GIT_SHA", "dev")}
+
+# Gradio is mounted on FastAPI rather than launched on its own so /health can sit beside it on the same port.
+app = gr.mount_gradio_app(app, interface, path="")
+
 if __name__ == "__main__":
     port = 7861
     print(f"Launching Gradio app on port {port}...")
-    interface.launch(
-        server_name="0.0.0.0",
-        server_port=port,
-        share=False
-    )
+    uvicorn.run(app, host="0.0.0.0", port=port)

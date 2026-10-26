@@ -37,11 +37,13 @@ jobs:
           context: ./server/ # UPDATE
           push: true
           tags: ghcr.io/jonorl/fugazzeta:latest # UPDATE
+          build-args: GIT_SHA=${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Deploy to VPS
-        uses: appleboy/ssh-action@v1
+        # Pinned to a commit because this third-party action receives the VPS SSH key, and tags can be moved.
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
@@ -49,3 +51,30 @@ jobs:
           script: | # UPDATE
             docker compose -f ~/my-VPS/projects/docker-compose.yml pull fugazzeta
             docker compose -f ~/my-VPS/projects/docker-compose.yml up -d fugazzeta
+
+      # A green deploy only means the container was recreated. This waits until /health reports this commit, so the
+      # new container (not the old one) is answering through Caddy with the model loaded, then checks that Gradio
+      # still exposes the endpoint the frontend calls.
+      - name: Smoke test
+        env:
+          BASE: https://pizza.jonathan-orlowski.dev
+          EXPECTED_VERSION: ${{ github.sha }}
+        run: |
+          # Loading the model on the VPS's CPU is slow, so this allows up to three minutes.
+          for attempt in $(seq 1 36); do
+            health=$(curl -s --max-time 10 "$BASE/health" || true)
+            if echo "$health" | jq -e --arg v "$EXPECTED_VERSION" '.status == "ok" and .version == $v' > /dev/null 2>&1; then
+              echo "New version healthy after $attempt attempt(s)"
+              break
+            fi
+            if [ "$attempt" -eq 36 ]; then
+              echo "::error::/health did not report status ok for $EXPECTED_VERSION within three minutes. Last response: $health"
+              exit 1
+            fi
+            sleep 5
+          done
+
+          curl -fsS --max-time 10 "$BASE/config" | jq -e '[.dependencies[].api_name] | index("classify_image")' > /dev/null \
+            || { echo "::error::Gradio no longer exposes /classify_image, which the frontend calls"; exit 1; }
+
+          echo "Smoke test passed"

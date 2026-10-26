@@ -1,114 +1,92 @@
 # Fugazzeta Detector
 
-This repository features an image classification model capable of distinguishing between fugazzeta (an Argentine pizza variant) and standard pizza. The model was built using the fastai library, leveraging a pre-trained convnext_tiny architecture and fine-tuned over 4 epochs. The data pipeline included downloading images, verifying file integrity, and applying data augmentation techniques. The trained model, along with its learned weights, is saved in both the standard model.pkl for easy deployment and portability.
+[![Test](https://github.com/jonorl/fugazzeta-frontend/actions/workflows/test.yml/badge.svg)](https://github.com/jonorl/fugazzeta-frontend/actions/workflows/test.yml)
+[![Build and Deploy](https://github.com/jonorl/fugazzeta-frontend/actions/workflows/deploy.yml/badge.svg)](https://github.com/jonorl/fugazzeta-frontend/actions/workflows/deploy.yml)
+[![CodeQL](https://github.com/jonorl/fugazzeta-frontend/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/jonorl/fugazzeta-frontend/security/code-scanning)
+[![API status](https://img.shields.io/website?url=https%3A%2F%2Fpizza.jonathan-orlowski.dev%2Fhealth&label=api&up_message=healthy&down_message=down)](https://pizza.jonathan-orlowski.dev/health)
+[![Licence](https://img.shields.io/github/license/jonorl/fugazzeta-frontend)](LICENSE)
 
-This is my first AI/ML project following the [Practical Deep Learning for Coders](https://course.fast.ai/) course by Jeremy Howard.
+Upload a photo of a pizza and find out whether it is a fugazzeta. Try it at [fugazzeta.pages.dev](https://fugazzeta.pages.dev).
 
-[Link to my HuggingFace repo](https://huggingface.co/spaces/jonorl/fugazzeta)
+Fugazzeta is a pizza from Buenos Aires: a thick, fluffy dough filled with mozzarella and topped with onions, so the cheese sits inside the dough as well as on top. The classifier is a fine-tuned `convnext_tiny` built with fastai. It was my first machine-learning project, made while following Jeremy Howard's [Practical Deep Learning for Coders](https://course.fast.ai/).
 
-## What is a Fugazzeta?
+## Architecture
 
-Fugazzeta is a traditional Argentine pizza style originating from Buenos Aires. It's characterized by its thick, fluffy dough filled with mozzarella cheese, topped with sweet onions, and often finished with oregano and olive oil. Unlike regular pizza, fugazzeta has cheese both inside the dough and on top, creating a unique double-cheese experience.
+- **Frontend** (repository root): a React single-page app, built by Cloudflare Pages on every push. It sends the image to the model with `@gradio/client` and shows the label and confidence, in English or Spanish.
+- **Model API** (`/server`): a Gradio app mounted on FastAPI, which adds `/health`. It runs in Docker on a VPS behind Caddy at `pizza.jonathan-orlowski.dev`. The trained `model.pkl` is not in the repository; the VPS mounts it into the container at `/app/models`.
 
-## Features
+## Project structure
 
-- **AI-Powered Classification**: Uses a custom-trained machine learning based on fastAI to identify fugazzeta pizzas
-- **Mobile-First Design**: Responsive layout optimized for all screen sizes
-- **Bilingual Support**: Toggle between English and Spanish
-- **Confidence Scores**: Shows prediction confidence with visual progress bars
-- **Pizza-Themed UI**: Warm, inviting color scheme with smooth animations
-- **Fast & Lightweight**: Built with Vite for optimal performance
-
-## Tech Stack
-
-- **Frontend**: React 18 + TypeScript
-- **Build Tool**: Vite
-- **Styling**: Tailwind CSS
-- **Icons**: Lucide React
-- **ML API**: Gradio Client (HuggingFace)
-- **Model**: PyTorch / FastAI
-
-### Installation
-
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/fugazzeta-detector.git
-cd fugazzeta-detector
+```
+├── src/
+│   ├── App.tsx                 # The whole UI: upload, analysis and result
+│   └── consts/translations.ts  # English and Spanish strings
+├── public/
+│   ├── _headers                # Cloudflare Pages security headers (CSP)
+│   └── gtag-init.js            # Google Analytics bootstrap
+└── server/
+    ├── app.py                  # Gradio + FastAPI app served in production
+    ├── fetchSamples.py         # Downloads training images
+    ├── trainingModel.py        # Trains the classifier and exports model.pkl
+    ├── modelOutput.py          # Tries the exported model on one image
+    └── Dockerfile
 ```
 
-2. Install dependencies:
+## Tech stack
+
+- **Frontend:** React 19, TypeScript, Vite, Tailwind CSS, Lucide and React Icons
+- **Model:** fastai and PyTorch (CPU), served with Gradio and FastAPI
+- **Hosting:** Cloudflare Pages for the frontend; Docker, Caddy and GHCR on the VPS for the model
+
+## Getting started
+
+### Frontend
+
 ```bash
 npm install
-```
-
-3. Start the development server:
-```bash
 npm run dev
 ```
 
-4. Open your browser and navigate to `http://localhost:5173`
+Then open `http://localhost:5173`. The app calls the production model API, so nothing else needs to run.
 
-### Build for Production
+### Model API
+
+You need a trained `model.pkl` in `server/models/`. Run `fetchSamples.py` and then `trainingModel.py` to make one.
 
 ```bash
-npm run build
+cd server
+docker build -t fugazzeta .
+docker run -p 7861:7861 -v "$PWD/models:/app/models" fugazzeta
 ```
 
-The production-ready files will be in the `dist` directory.
+`http://localhost:7861` serves the Gradio page, and `http://localhost:7861/health` the health check.
 
-## Usage
+## Testing
 
-1. Click or tap the upload area to select a pizza image
-2. Wait for the image to upload and preview
-3. Click "Analyze Pizza" (or "Analizar Pizza" in Spanish)
-4. View the classification result with confidence percentage
-5. Try another pizza or toggle between English and Spanish
-
-## Project Structure
-
-```
-fugazzeta-detector/
-├── src/
-│   ├── App.tsx                       # Root component
-│   └── main.tsx                      # Entry point
-├── package.json
-├── vite.config.ts
-├── tailwind.config.js
-└── README.md
+```bash
+npm test                # once
+npm run test:watch      # re-run on changes
+npm run test:coverage   # with a coverage report
+npm run typecheck       # TypeScript, without building
+npm run lint            # ESLint
 ```
 
-## API Integration
+The Jest suite covers the language toggle, uploading an image, both results, the error message and starting again, with the Gradio client mocked. It also checks that both languages have the same strings. The model API has no automated tests; the deploy's smoke test checks it once it is live.
 
-This project connects to a custom Gradio model hosted on HuggingFace Spaces:
+## Deployment
 
-```typescript
-const client = await Client.connect("jonorl/fugazzeta");
-const result = await client.predict("/predict", { img: imageBlob });
-```
+- **Model API:** pushing to `main` with changes under `server/` runs the `Build and Deploy` workflow. It builds the Docker image, pushes it to `ghcr.io/jonorl/fugazzeta`, then pulls it on the VPS and recreates the container with Docker Compose. A final smoke test waits until `/health` reports the new commit, then checks that Gradio still exposes the endpoint the frontend calls, and fails the run otherwise.
+- **Frontend:** Cloudflare Pages builds it on every push, with preview deployments for other branches.
 
-The model returns predictions with labels and confidence scores for classification.
+## Security and maintenance
 
-## Development
+- **CI:** the `Test` workflow type-checks, lints and tests the frontend on every push and pull request.
+- **Branch ruleset:** changes to `main` go through a pull request with passing tests and no new high or critical CodeQL alerts. Force-pushes and deletion are blocked; repository admins can bypass.
+- **CodeQL:** scans the TypeScript, the Python and the workflows weekly and on every pull request.
+- **Content Security Policy:** set in report-only mode in [`public/_headers`](public/_headers), alongside other security headers.
+- **Dependabot:** version updates every Monday for npm, pip and the Docker base image, and monthly for GitHub Actions. Minor and patch bumps arrive grouped. The model's own stack (fastai, fastcore, timm), Pillow and torch are held back; [`.github/dependabot.yml`](.github/dependabot.yml) explains why.
+- **Secret scanning** with push protection is on.
 
-### Available Scripts
+## Author
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build locally
-- `npm run lint` - Run ESLint
-- `npm run typecheck` - Type-check without building
-- `npm test` - Run the Jest tests (`test:watch`, `test:coverage` also available)
-
-### Dependencies
-
-```json
-{
-  "react": "^18.x",
-  "lucide-react": "^0.263.1",
-  "@gradio/client": "latest"
-}
-```
-
-## Contact
-
-[Jonathan Orlowski](https://jonathan-orlowski.pages.dev/)
+Developed by [Jonathan Orlowski](https://jonathan-orlowski.dev/). Licensed under the Apache License 2.0, see [`LICENSE`](LICENSE).
