@@ -50,7 +50,8 @@ app = FastAPI()
 
 # The process exits if the model fails to load, so answering at all means it is ready. version is the commit the
 # image was built from, so the deploy's smoke test can tell the new container is the one answering.
-@app.get("/health")
+# HEAD is listed because the README's status badge (Shields) checks with it, and FastAPI does not add it to GET routes.
+@app.api_route("/health", methods=["GET", "HEAD"])
 def health():
     return {"status": "ok", "classes": list(learn.dls.vocab), "version": os.environ.get("GIT_SHA", "dev")}
 
