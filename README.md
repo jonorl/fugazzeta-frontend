@@ -6,7 +6,7 @@
 [![API status](https://img.shields.io/website?url=https%3A%2F%2Fpizza.jonathan-orlowski.dev%2Fhealth&label=api&up_message=healthy&down_message=down)](https://pizza.jonathan-orlowski.dev/health)
 [![Licence](https://img.shields.io/github/license/jonorl/fugazzeta-frontend)](LICENSE)
 
-Upload a photo of a pizza and find out whether it is a fugazzeta. Try it at [fugazzeta.pages.dev](https://fugazzeta.pages.dev).
+Upload a photo of a pizza and find out whether it is a fugazzeta. Try it at [jonathan-orlowski.dev/fugazzeta/](https://jonathan-orlowski.dev/fugazzeta/).
 
 Fugazzeta is a pizza from Buenos Aires: a thick, fluffy dough filled with mozzarella and topped with onions, so the cheese sits inside the dough as well as on top. The classifier is a fine-tuned `convnext_tiny` built with fastai. It was my first machine-learning project, made while following Jeremy Howard's [Practical Deep Learning for Coders](https://course.fast.ai/).
 
