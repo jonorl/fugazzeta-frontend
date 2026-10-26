@@ -35,6 +35,12 @@ updates:
       - dependency-name: torch
       # The Dockerfile force-reinstalls Pillow 10.4.0 after the requirements, so a bump here would never ship.
       - dependency-name: pillow
+      # model.pkl is a pickle of fastai, fastcore and timm objects, so these move together and only after
+      # load_learner has been tried against the real model. plum-dispatch is bounded by fastai.
+      - dependency-name: fastai
+      - dependency-name: fastcore
+      - dependency-name: timm
+      - dependency-name: plum-dispatch
     open-pull-requests-limit: 5
 
   - package-ecosystem: docker
