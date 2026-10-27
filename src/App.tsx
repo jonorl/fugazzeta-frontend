@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Upload, Loader2, Pizza} from "lucide-react";
 import { FaGithub } from "react-icons/fa";
-import { SiHuggingface } from "react-icons/si";
 import { translations } from "./consts/translations";
 
 interface Confidence {
@@ -61,7 +60,6 @@ export default function FugazzetaDetector() {
     } catch (err) {
       setError(t.errorMessage);
       console.error("Connection Error:", err);
-      // If analysis fails, space might be sleeping
     } finally {
       setLoading(false);
     }
@@ -238,7 +236,7 @@ export default function FugazzetaDetector() {
           >
             Jonathan Orlowski
           </a>
-          {/* min-w-6/min-h-6 keep the icon links at the 24px minimum touch target. */}
+          {/* min-w-6/min-h-6 keep the icon link at the 24px minimum touch target. */}
           <a
             href="https://github.com/jonorl/fugazzeta"
             target="_blank"
@@ -247,15 +245,6 @@ export default function FugazzetaDetector() {
             className="inline-flex items-center justify-center align-middle min-w-6 min-h-6 ml-1 hover:text-white/80"
           >
             <FaGithub className="mb-1" aria-hidden="true" />
-          </a>
-          <a
-            href="https://huggingface.co/spaces/jonorl/fugazzeta"
-            target="_blank"
-            rel="noreferrer"
-            aria-label="Hugging Face"
-            className="inline-flex items-center justify-center align-middle min-w-6 min-h-6 ml-1 hover:text-white/80"
-          >
-            <SiHuggingface className="mb-1" aria-hidden="true" />
           </a>
         </footer>
       </div>
