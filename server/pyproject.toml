@@ -1,0 +1,14 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+# fastai is designed to be star-imported (`from fastai.vision.all import *`), so names from it look undefined.
+ignore = ["F403", "F405"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app", "conftest"]

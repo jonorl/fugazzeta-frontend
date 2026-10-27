@@ -1,0 +1,11 @@
+# The image only serves app.py; tests, training data and tool caches stay out of it.
+tests/
+requirements-dev.txt
+pyproject.toml
+fugazzeta_or_pizza/
+models/
+*.pkl
+*.pth
+.pytest_cache/
+.ruff_cache/
+__pycache__/

@@ -1,19 +1,20 @@
 import os
 
 import gradio as gr
-import uvicorn
-from fastapi import FastAPI
-from fastai.vision.all import *
-from PIL import Image as PILImage
 import torchvision.transforms.functional as TF
+import uvicorn
+from fastai.vision.all import *
+from fastapi import FastAPI
+from PIL import Image as PILImage
 
 try:
-    learn = load_learner('./models/model.pkl', cpu=True)
+    learn = load_learner("./models/model.pkl", cpu=True)
     print("Successfully loaded learner onto CPU.")
     print(f"Classes: {learn.dls.vocab}")
 except Exception as e:
     print(f"Load failed: {e}")
     raise e
+
 
 def classify_image(img_path):
     # Step 1: replicate after_item (Resize to 460 with squish = no crop, just resize)
@@ -28,25 +29,27 @@ def classify_image(img_path):
 
     # Step 4: exact normalisation stats from the model
     mean = tensor.new_tensor([0.4850, 0.4560, 0.4060]).view(1, 3, 1, 1)
-    std  = tensor.new_tensor([0.2290, 0.2240, 0.2250]).view(1, 3, 1, 1)
+    std = tensor.new_tensor([0.2290, 0.2240, 0.2250]).view(1, 3, 1, 1)
     tensor = (tensor - mean) / std
 
     # Step 5: call the model directly, bypassing fastai's DataLoader/transform pipeline
     learn.model.eval()
     with torch.no_grad():
         logits = learn.model(tensor)
-        probs  = torch.softmax(logits, dim=1)[0]
+        probs = torch.softmax(logits, dim=1)[0]
 
     return {learn.dls.vocab[i]: float(probs[i]) for i in range(len(learn.dls.vocab))}
+
 
 interface = gr.Interface(
     fn=classify_image,
     inputs=gr.Image(type="filepath"),
     outputs=gr.Label(num_top_classes=2),
-    title="Pizza vs Fugazzeta Classifier"
+    title="Pizza vs Fugazzeta Classifier",
 )
 
 app = FastAPI()
+
 
 # The process exits if the model fails to load, so answering at all means it is ready. version is the commit the
 # image was built from, so the deploy's smoke test can tell the new container is the one answering.
@@ -54,6 +57,7 @@ app = FastAPI()
 @app.api_route("/health", methods=["GET", "HEAD"])
 def health():
     return {"status": "ok", "classes": list(learn.dls.vocab), "version": os.environ.get("GIT_SHA", "dev")}
+
 
 # Gradio is mounted on FastAPI rather than launched on its own so /health can sit beside it on the same port.
 app = gr.mount_gradio_app(app, interface, path="")

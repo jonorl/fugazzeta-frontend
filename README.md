@@ -32,11 +32,27 @@ Fugazzeta is a pizza from Buenos Aires: a thick, fluffy dough filled with mozzar
 │   └── gtag-init.js            # Google Analytics bootstrap
 └── server/
     ├── app.py                  # Gradio + FastAPI app served in production
+    ├── tests/                  # pytest suite, run against a stub model
     ├── fetchSamples.py         # Downloads training images
     ├── trainingModel.py        # Trains the classifier and exports model.pkl
     ├── modelOutput.py          # Tries the exported model on one image
     └── Dockerfile
 ```
+
+## Model
+
+- **Task:** binary image classification. The two labels are `fugazzeta` and `pizza argentina`, taken from the folder names the images are downloaded into.
+- **Data:** up to 200 DuckDuckGo image results for each of "fugazzeta photo" and "pizza argentina photo", resized to at most 400 px. Corrupt files are removed, and a fixed random 20% (seed 42) is held out for validation.
+- **Architecture:** `convnext_tiny` pre-trained on ImageNet, fine-tuned with fastai.
+- **Training:** the learning rate comes from `lr_find`. The new head trains for 3 epochs with the body frozen, then up to 10 more; then the whole network trains for up to 20 epochs with discriminative learning rates. Early stopping watches the validation loss, and the best epoch's weights are the ones exported.
+- **Augmentation:** a squish resize to 460 px, then random crops to 224 px, flips, rotation up to 15°, warping and lighting changes.
+- **Serving:** `app.py` repeats the validation preprocessing by hand (squish to 460, centre-crop to 224, ImageNet normalisation) and calls the network directly, which is faster on the VPS's CPU than fastai's prediction pipeline.
+
+### Limitations
+
+- Every image gets one of the two labels, so a photo of something that is not a pizza still comes back as one of them.
+- The labels are whatever the search engine returned for each query and were not checked by hand, so some training images are likely mislabelled.
+- The validation images come from the same searches as the training images, so validation accuracy probably overstates how well it does on people's own photos.
 
 ## Tech stack
 
@@ -57,7 +73,7 @@ Then open `http://localhost:5173`. The app calls the production model API, so no
 
 ### Model API
 
-You need a trained `model.pkl` in `server/models/`. Run `fetchSamples.py` and then `trainingModel.py` to make one.
+You need a trained `model.pkl` in `server/models/`. To make one, run `python fetchSamples.py` and then `python trainingModel.py` from `server/`; training also writes its validation results and confusion matrix to `docs/`. `python modelOutput.py <image>` tries the result on one photo.
 
 ```bash
 cd server
@@ -69,6 +85,8 @@ docker run -p 7861:7861 -v "$PWD/models:/app/models" fugazzeta
 
 ## Testing
 
+### Frontend
+
 ```bash
 npm test                # once
 npm run test:watch      # re-run on changes
@@ -77,20 +95,31 @@ npm run typecheck       # TypeScript, without building
 npm run lint            # ESLint
 ```
 
-The Jest suite covers the language toggle, uploading an image, both results, the error message and starting again, with the Gradio client mocked. It also checks that both languages have the same strings. The model API has no automated tests; the deploy's smoke test checks it once it is live.
+The Jest suite covers the language toggle, uploading an image, both results, the error message and starting again, with the Gradio client mocked. It also checks that both languages have the same strings.
+
+### Model API
+
+```bash
+cd server
+pip install -r requirements.txt -r requirements-dev.txt
+python -m pytest                       # tests
+ruff check . && ruff format --check .  # lint and formatting
+```
+
+The tests swap in a stub model, so they need no `model.pkl`. They check that `/health` answers `GET` and `HEAD`, that Gradio still exposes the `classify_image` endpoint the frontend calls, and that images of any size and colour mode reach the network as normalised 224 × 224 tensors.
 
 ## Deployment
 
-- **Model API:** pushing to `main` with changes under `server/` runs the `Build and Deploy` workflow. It builds the Docker image, pushes it to `ghcr.io/jonorl/fugazzeta`, then pulls it on the VPS and recreates the container with Docker Compose. A final smoke test waits until `/health` reports the new commit, then checks that Gradio still exposes the endpoint the frontend calls, and fails the run otherwise.
+- **Model API:** pushing to `main` with changes under `server/` runs the `Build and Deploy` workflow. It runs the tests first, then builds the Docker image, pushes it to `ghcr.io/jonorl/fugazzeta`, then pulls it on the VPS and recreates the container with Docker Compose. A final smoke test waits until `/health` reports the new commit, then checks that Gradio still exposes the endpoint the frontend calls, and fails the run otherwise.
 - **Frontend:** Cloudflare Pages builds it on every push, with preview deployments for other branches.
 
 ## Security and maintenance
 
-- **CI:** the `Test` workflow type-checks, lints and tests the frontend on every push and pull request.
+- **CI:** the `Test` workflow runs on every push and pull request. It type-checks, lints and tests the frontend, and lints and tests the model API.
 - **Branch ruleset:** changes to `main` go through a pull request with passing tests and no new high or critical CodeQL alerts. Force-pushes and deletion are blocked; repository admins can bypass.
 - **CodeQL:** scans the TypeScript, the Python and the workflows weekly and on every pull request.
-- **Content Security Policy:** set in report-only mode in [`public/_headers`](public/_headers), alongside other security headers.
-- **Dependabot:** version updates every Monday for npm, pip and the Docker base image, and monthly for GitHub Actions. Minor and patch bumps arrive grouped. The model's own stack (fastai, fastcore, timm), Pillow and torch are held back; [`.github/dependabot.yml`](.github/dependabot.yml) explains why.
+- **Content Security Policy:** enforced from [`public/_headers`](public/_headers), alongside other security headers. Scripts load only from the site itself, Google Analytics and Cloudflare Web Analytics, and the page can only talk to the model API and the two analytics services.
+- **Dependabot:** security updates as soon as an advisory appears, and version updates every Monday for npm, pip and the Docker base image, and monthly for GitHub Actions. Minor and patch bumps arrive grouped. The model's own stack (fastai, fastcore, timm), Pillow and torch are held back; [`.github/dependabot.yml`](.github/dependabot.yml) explains why.
 - **Secret scanning** with push protection is on.
 
 ## Author

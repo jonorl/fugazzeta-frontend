@@ -1,29 +1,29 @@
-from PIL import Image
-from ddgs import *
-from fastcore.all import *
+"""Downloads the training images: up to 200 DuckDuckGo results per class into fugazzeta_or_pizza/<class>/."""
+
 import time
-from fastdownload import download_url
+
+from ddgs import DDGS
 from fastai.vision.all import *
 
-## Step 1: Download images of carrots and vegtetables
+DATA_PATH = Path("fugazzeta_or_pizza")
+# Folder names become the model's labels, so renaming one changes what the API answers.
+CLASSES = ("fugazzeta", "pizza argentina")
 
-def search_images(keywords, max_images=200): return L(DDGS().images(keywords, max_results=max_images)).itemgot('image')
 
-urls = search_images('fugazzeta', max_images=1)
-urls[0]
+def search_images(keywords, max_images=200):
+    return L(DDGS().images(keywords, max_results=max_images)).itemgot("image")
 
-dest = 'fugazzeta.jpg'
-download_url(urls[0], dest, show_progress=False)
 
-im = Image.open(dest)
-im.to_thumb(256,256)
+def main():
+    for label in CLASSES:
+        dest = DATA_PATH / label
+        dest.mkdir(exist_ok=True, parents=True)
+        download_images(dest, urls=search_images(f"{label} photo"))
+        # Pauses between searches so DuckDuckGo does not rate-limit the second one.
+        time.sleep(5)
+        resize_images(dest, max_size=400, dest=dest)
+        print(f"{label}: {len(get_image_files(dest))} images")
 
-searches = 'fugazzeta','pizza argentina'
-path = Path('fugazzeta_or_pizza')
 
-for o in searches:
-    dest = (path/o)
-    dest.mkdir(exist_ok=True, parents=True)
-    download_images(dest, urls=search_images(f'{o} photo'))
-    time.sleep(5)
-    resize_images(path/o, max_size=400, dest=path/o)
+if __name__ == "__main__":
+    main()
