@@ -1,6 +1,7 @@
 """Trains the classifier on fugazzeta_or_pizza/ and exports model.pkl, plus its validation results for the README."""
 
 import json
+import sys
 
 import matplotlib
 
@@ -14,6 +15,9 @@ DOCS_PATH = Path(__file__).resolve().parent.parent / "docs"
 
 
 def build_dataloaders():
+    # fastai fails with an unhelpful TypeError on an empty folder, so this says what is actually wrong.
+    if not get_image_files(DATA_PATH):
+        sys.exit(f"No images in {DATA_PATH}/; run fetchSamples.py first.")
     failed = verify_images(get_image_files(DATA_PATH))
     failed.map(Path.unlink)
     print(f"Removed {len(failed)} corrupted images")

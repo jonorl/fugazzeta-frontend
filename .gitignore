@@ -29,3 +29,4 @@ dist-ssr
 /server/models
 /server/fugazzeta.jpg
 /server/fuga12.png
+/server/.venv
