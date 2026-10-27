@@ -10,7 +10,8 @@ WORKDIR /app
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-RUN pip install --no-cache-dir "Pillow==10.4.0" --force-reinstall
+COPY requirements-overrides.txt .
+RUN pip install --no-cache-dir --no-deps -r requirements-overrides.txt
 
 COPY . .
 

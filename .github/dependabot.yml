@@ -33,8 +33,6 @@ updates:
     ignore:
       # The CPU-only build comes from the PyTorch index with a +cpu suffix, which Dependabot cannot resolve.
       - dependency-name: torch
-      # The Dockerfile force-reinstalls Pillow 10.4.0 after the requirements, so a bump here would never ship.
-      - dependency-name: pillow
       # model.pkl is a pickle of fastai, fastcore and timm objects, so these move together and only after
       # load_learner has been tried against the real model. plum-dispatch is bounded by fastai.
       - dependency-name: fastai
