@@ -10,6 +10,12 @@ Upload a photo of a pizza and find out whether it is a fugazzeta. Try it at [jon
 
 Fugazzeta is a pizza from Buenos Aires: a thick, fluffy dough filled with mozzarella and topped with onions, so the cheese sits inside the dough as well as on top. The classifier is a fine-tuned `convnext_tiny` built with fastai. It was my first machine-learning project, made while following Jeremy Howard's [Practical Deep Learning for Coders](https://course.fast.ai/).
 
+<p align="center">
+  <a href="https://jonathan-orlowski.dev/fugazzeta/">
+    <img src="docs/preview.gif" alt="Uploading a photo of a fugazzeta: the app analyses it and answers &quot;It's a Fugazzeta!&quot; with 95.1% confidence." width="300" />
+  </a>
+</p>
+
 ## Architecture
 
 - **Frontend** (repository root): a React single-page app, built by Cloudflare Pages on every push. It sends the image to the model with `@gradio/client` and shows the label and confidence, in English or Spanish.
