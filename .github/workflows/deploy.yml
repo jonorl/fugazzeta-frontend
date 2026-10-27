@@ -9,6 +9,9 @@ on:
       - '.github/workflows/**'
   workflow_dispatch:
 
+# Read-only by default; only build-and-deploy widens it, to push the image to GHCR.
+permissions:
+  contents: read
 
 jobs:
   test:
