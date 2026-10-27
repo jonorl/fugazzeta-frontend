@@ -238,7 +238,7 @@ export default function FugazzetaDetector() {
             Jonathan Orlowski
           </a>
           <a
-            href="https://github.com/jonorl/fugazzeta-frontend"
+            href="https://github.com/jonorl/fugazzeta"
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center align-middle ml-2 hover:text-white/80"

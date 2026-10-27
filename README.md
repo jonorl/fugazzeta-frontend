@@ -1,10 +1,10 @@
 # Fugazzeta Detector
 
-[![Test](https://github.com/jonorl/fugazzeta-frontend/actions/workflows/test.yml/badge.svg)](https://github.com/jonorl/fugazzeta-frontend/actions/workflows/test.yml)
-[![Build and Deploy](https://github.com/jonorl/fugazzeta-frontend/actions/workflows/deploy.yml/badge.svg)](https://github.com/jonorl/fugazzeta-frontend/actions/workflows/deploy.yml)
-[![CodeQL](https://github.com/jonorl/fugazzeta-frontend/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/jonorl/fugazzeta-frontend/security/code-scanning)
+[![Test](https://github.com/jonorl/fugazzeta/actions/workflows/test.yml/badge.svg)](https://github.com/jonorl/fugazzeta/actions/workflows/test.yml)
+[![Build and Deploy](https://github.com/jonorl/fugazzeta/actions/workflows/deploy.yml/badge.svg)](https://github.com/jonorl/fugazzeta/actions/workflows/deploy.yml)
+[![CodeQL](https://github.com/jonorl/fugazzeta/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/jonorl/fugazzeta/security/code-scanning)
 [![API status](https://img.shields.io/website?url=https%3A%2F%2Fpizza.jonathan-orlowski.dev%2Fhealth&label=api&up_message=healthy&down_message=down)](https://pizza.jonathan-orlowski.dev/health)
-[![Licence](https://img.shields.io/github/license/jonorl/fugazzeta-frontend)](LICENSE)
+[![Licence](https://img.shields.io/github/license/jonorl/fugazzeta)](LICENSE)
 
 Upload a photo of a pizza and find out whether it is a fugazzeta. Try it at [jonathan-orlowski.dev/fugazzeta/](https://jonathan-orlowski.dev/fugazzeta/).
 
